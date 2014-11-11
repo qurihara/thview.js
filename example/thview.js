@@ -5,6 +5,8 @@
  *
  */
 
+var count = 0;
+
 var ThView = function(arg) {
 	this.d2r = function(d) { return d * Math.PI / 180; };
 	this.id = arg.id;											// id of parent element *required*
@@ -113,33 +115,45 @@ ThView.prototype.setCameraDir = function(alpha, beta, gamma) {
 
 	switch (window.orientation) {
 		case 0:
-			this.mesh.rotation.x = this.degree[0] + Math.PI + Math.PI / 2;
-			this.mesh.rotation.y = this.degree[1];
-			this.mesh.rotation.z = this.degree[2];
+			this.mesh[0].rotation.x = this.degree[0] + Math.PI + Math.PI / 2;
+			this.mesh[0].rotation.y = this.degree[1];
+			this.mesh[0].rotation.z = this.degree[2];
+			this.mesh[1].rotation.x = this.degree[0] + Math.PI + Math.PI / 2;
+			this.mesh[1].rotation.y = this.degree[1];
+			this.mesh[1].rotation.z = this.degree[2];
 			this.camera.rotation.x = beta;
 			this.camera.rotation.y = gamma;
 			this.camera.rotation.z = alpha;
 			break;
 		case 90:
-			this.mesh.rotation.x = this.degree[0] + Math.PI;
-			this.mesh.rotation.y = this.degree[1] + alpha - Math.PI / 2;
-			this.mesh.rotation.z = this.degree[2];
+			this.mesh[0].rotation.x = this.degree[0] + Math.PI;
+			this.mesh[0].rotation.y = this.degree[1] + alpha - Math.PI / 2;
+			this.mesh[0].rotation.z = this.degree[2];
+			this.mesh[1].rotation.x = this.degree[0] + Math.PI;
+			this.mesh[1].rotation.y = this.degree[1] + alpha - Math.PI / 2;
+			this.mesh[1].rotation.z = this.degree[2];
 			this.camera.rotation.x = -gamma - Math.PI / 2;
 			this.camera.rotation.y = 0;
 			this.camera.rotation.z = -beta;
 			break;
 		case -90:
-			this.mesh.rotation.x = this.degree[0] + Math.PI;
-			this.mesh.rotation.y = this.degree[1] + alpha - Math.PI / 2;
-			this.mesh.rotation.z = this.degree[2] + 0;
+			this.mesh[0].rotation.x = this.degree[0] + Math.PI;
+			this.mesh[0].rotation.y = this.degree[1] + alpha - Math.PI / 2;
+			this.mesh[0].rotation.z = this.degree[2] + 0;
+			this.mesh[1].rotation.x = this.degree[0] + Math.PI;
+			this.mesh[1].rotation.y = this.degree[1] + alpha - Math.PI / 2;
+			this.mesh[1].rotation.z = this.degree[2] + 0;
 			this.camera.rotation.x = -(-gamma - Math.PI / 2);
 			this.camera.rotation.y = 0;
 			this.camera.rotation.z = -beta + Math.PI;
 			break;
 		case 180:
-			this.mesh.rotation.x = this.degree[0] + Math.PI + Math.PI / 2;
-			this.mesh.rotation.y = this.degree[1];
-			this.mesh.rotation.z = this.degree[2];
+			this.mesh[0].rotation.x = this.degree[0] + Math.PI + Math.PI / 2;
+			this.mesh[0].rotation.y = this.degree[1];
+			this.mesh[0].rotation.z = this.degree[2];
+			this.mesh[1].rotation.x = this.degree[0] + Math.PI + Math.PI / 2;
+			this.mesh[1].rotation.y = this.degree[1];
+			this.mesh[1].rotation.z = this.degree[2];
 			this.camera.rotation.x = -beta;
 			this.camera.rotation.y = -gamma;
 			this.camera.rotation.z = alpha + Math.PI;
@@ -245,38 +259,69 @@ ThView.prototype.show = function() {
 	}
 
 	///////// MATERIAL
-	this.material = new THREE.MeshPhongMaterial({
+	this.material = new Array();
+	this.material[0] = new THREE.MeshPhongMaterial({
 		side: THREE.DoubleSide,
-		color: 0xffffff, specular: 0xcccccc, shininess:50, ambient: 0xffffff,
+		color: 0xffffff, specular: 0xcccccc, shininess:50, ambient: 0xffffff,transparent:true, blending:THREE.NormalBlending, opacity:1,
 		map: this.texture[this.imageNo] });
+
+	this.material[1] = new THREE.MeshPhongMaterial({
+		side: THREE.DoubleSide,
+		color: 0xffffff, specular: 0xcccccc, shininess:50, ambient: 0xffffff,transparent:true, blending:THREE.NormalBlending, opacity:0,
+		map: this.texture[(this.imageNo + 1) % self.texture.length] });
 
 	//// texture animation
 	if ((this.texture.length > 1) && (!self.isSlave)) {
 		setInterval(function() {
-			self.imageNo = (self.imageNo + 1) % self.texture.length;
-			self.material.map = self.texture[self.imageNo];
-			if (self.sync) {
-				self.sync.material.map = self.sync.texture[self.imageNo];
+			count = count+0.1;
+			if (count > 1) {
+				count = 0;
+				self.imageNo = (self.imageNo + 1) % self.texture.length;
 			}
-		}, this.interval);
+			var opa = 1.0;
+			if (count>0.7) {
+				opa = 1.0-(count-0.7)/0.3;
+				self.material[0].map = self.texture[self.imageNo];
+				self.material[1].map = self.texture[(self.imageNo + 1) % self.texture.length];
+				self.material[0].opacity = opa;//count;
+				self.material[1].opacity = 1.0-opa;//count;
+				if (self.sync) {
+					self.sync.material[0].map = self.sync.texture[self.imageNo];
+					self.sync.material[1].map = self.sync.texture[(self.imageNo + 1) % self.sync.texture.length];
+					self.sync.material[0].opacity = opa;//count;
+					self.sync.material[1].opacity = 1.0-opa;//count;
+				}
+			}
+		}, this.interval/10);
 	}
 
 	///////// MESH
-	this.mesh = new THREE.Mesh(geometry, this.material);
+	this.mesh = new Array();	
+	this.mesh[0] = new THREE.Mesh(geometry, this.material[0]);
 	if (this.rendererType == 0)
-		this.mesh.rotation.x += Math.PI;
-	this.mesh.rotation.x += this.degree[0];
-	this.mesh.rotation.y += this.degree[1];
-	this.mesh.rotation.z += this.degree[2];
-	scene.add(this.mesh);
+		this.mesh[0].rotation.x += Math.PI;
+	this.mesh[0].rotation.x += this.degree[0];
+	this.mesh[0].rotation.y += this.degree[1];
+	this.mesh[0].rotation.z += this.degree[2];
+	scene.add(this.mesh[0]);
+
+	this.mesh[1] = new THREE.Mesh(geometry, self.material[1]);// self.sync.material);
+	if (this.rendererType == 0)
+		this.mesh[1].rotation.x += Math.PI;
+	this.mesh[1].rotation.x += this.degree[0];
+	this.mesh[1].rotation.y += this.degree[1];
+	this.mesh[1].rotation.z += this.degree[2];
+	scene.add(this.mesh[1]);
 
 	///////// Draw Loop
 	function render() {
 		requestAnimationFrame(render);
 		if ((self.rotation) && (!self.isSlave)) {
-			self.mesh.rotation.y += self.speed;
+			self.mesh[0].rotation.y += self.speed;
+			self.mesh[1].rotation.y += self.speed;
 			if (self.sync) {
-				self.sync.mesh.rotation.y += self.speed;
+				self.sync.mesh[0].rotation.y += self.speed;
+				self.sync.mesh[1].rotation.y += self.speed;
 			}
 		}
 		renderer.render(scene, self.camera);

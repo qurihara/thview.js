@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ThView.js - JavaScript Spherical Image Viewer</title>
+    <script type="text/javascript" src="three.min.js"></script>
+    <script type="text/javascript" src="thview.js"></script>
+</head>
+
+<body>
+    <div id="image1" style="position:absolute;top:0px;left:0px;"></div>
+    <script type="text/javascript" >
+        var img1 = new ThView({
+            id:'image1',
+            file: [
+                'images/R0010665.JPG',
+                'images/R0010664.JPG',
+                'images/R0010663.JPG',
+                'images/R0010662.JPG',
+                'images/R0010661.JPG',
+                'images/R0010660.JPG',
+                'images/R0010659.JPG',
+                'images/R0010658.JPG',
+                'images/R0010657.JPG',
+                'images/R0010656.JPG',
+                'images/R0010655.JPG',
+                'images/R0010654.JPG',
+                'images/R0010653.JPG',
+                'images/R0010652.JPG',
+                'images/R0010651.JPG',
+                'images/R0010650.JPG',
+                'images/R0010649.JPG',
+                'images/R0010648.JPG',
+                'images/R0010647.JPG',
+                'images/R0010646.JPG',
+                'images/R0010645.JPG',
+                'images/R0010644.JPG',
+                'images/R0010643.JPG',
+                'images/R0010642.JPG',
+                'images/R0010641.JPG'
+            ],
+            interval: 1000,
+            width: 980,
+            height: 560,
+            firstview: -90
+        });
+    </script>
+</body>
+</html>
